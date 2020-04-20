@@ -154,10 +154,10 @@ Temporary Items
 
 
 # pycharm
-.idea
+*.idea
 
 # pdf
-.pdf
+*.pdf
 
 # csv
-.csv
+*.csv
