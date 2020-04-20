@@ -153,13 +153,11 @@ Temporary Items
 .apdisk
 
 
-# csv
-.csv
-
-
-# PDF
-.pdf
-
-
 # pycharm
 .idea
+
+# pdf
+.pdf
+
+# csv
+.csv
