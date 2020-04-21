@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-@author: Vincent Roy @ Arthur Claude
+@author: Vincent Roy & Arthur Claude
 """
 import numpy as np
 import pandas as pd
