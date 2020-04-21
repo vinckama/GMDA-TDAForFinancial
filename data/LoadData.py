@@ -19,10 +19,10 @@ def load_data(data_path="data"):
                               header=0, delimiter=",")
 
     df_dict = {
-        "DowJones": DowJones_pd.Close,
-        "Nasdaq": Nasdaq_pd.Close,
-        "Russell2000": Russell2000_pd.Close,
-        "SP500": SP500_pd.Close
+        "DowJones": DowJones_pd['Adj Close'],
+        "Nasdaq": Nasdaq_pd['Adj Close'],
+        "Russell2000": Russell2000_pd['Adj Close'],
+        "SP500": SP500_pd['Adj Close']
     }
 
     for (name, df) in df_dict.items():
