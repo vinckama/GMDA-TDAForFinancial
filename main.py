@@ -23,3 +23,5 @@ if __name__ == "__main__":
 
     bottleneck = Bottleneck(df_log[:1000])
     bottleneck.visualise('1988-01-25', '1991-08-06', 20)
+    nn = Norm(df_log)
+    #nn.plot_norm('1997-01-03', '2000-05-10', 50)
