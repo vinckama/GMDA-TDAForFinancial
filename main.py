@@ -11,8 +11,9 @@ from persistence import Landscape, Norm
 
 
 def visualise(df):
-    df.plot()
+    df.plot(subplots=True)
     plt.xticks(rotation = 20)
+    plt.show()
 
 
 
@@ -21,9 +22,9 @@ if __name__ == "__main__":
     df = load_data()
     # visualise(df)
     df_log = log_df(df)
-    # visualise(df_log)
+    #visualise(df_log)
     aa = Landscape(df_log)
     #aa('2000-03-10', 80)
 
     nn = Norm(df_log)
-    #nn('1997-01-03', '2000-05-10', 50)
+    #nn.plot_norm('1997-01-03', '2000-05-10', 50)
