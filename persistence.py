@@ -6,6 +6,7 @@
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
+import matplotlib.dates as mdates
 import seaborn as sns
 import pandas as pd
 import numpy as np
@@ -92,8 +93,9 @@ class Persistence:
             raise SyntaxError("The date doesn't have the right format, "
                               "please follow the format 'YYYY-MM-DD'")
         if date not in self.df.index:
-            raise IndexError("Your date is not a trading day, it's not in the "
-                             "dataframe, please choose another date")
+            raise IndexError(f"Your date ({date}) is not a trading day, "
+                             f"it's not in the dataframe, "
+                             f"please choose another date")
 
     @staticmethod
     def verify_w_size(idx, w_size):
@@ -175,15 +177,20 @@ class Norm(Persistence):
             self.ax1 = self.fig.add_subplot(1, 1, 1)
             self.ax1.set_title('Normalized L1 and L2 norms of '
                                'persistence landscapes')
+            locator = mdates.AutoDateLocator(minticks=3, maxticks=7)
+            formatter = mdates.ConciseDateFormatter(locator)
+            self.ax1.xaxis.set_major_locator(locator)
+            self.ax1.xaxis.set_major_formatter(formatter)
         else:
             self.ax1.lines = []
 
         L1_r, L2_r = self.__call__(start_date, end_date, w_size)
         L1_r_normalized = self.normalize(L1_r)
         L2_r_normalized = self.normalize(L2_r)
-
-        self.ax1.plot(L1_r_normalized, label = 'L1')
-        self.ax1.plot(L2_r_normalized, label = 'L2')
+        dates = pd.to_datetime(self.df.loc[start_date: end_date].index[:-1])
+        self.ax1.plot(dates, L1_r_normalized, label = 'L1')
+        self.ax1.plot(dates, L2_r_normalized, label = 'L2')
+        self.ax1.set_xlim([dates[0], dates[-1]])
         self.ax1.legend()
         plt.show()
 
