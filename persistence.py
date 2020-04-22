@@ -11,6 +11,8 @@ import pandas as pd
 import numpy as np
 import gudhi as gd
 import re
+import sys
+from utils import ProgressBar
 
 
 class Persistence:
@@ -129,10 +131,16 @@ class Norm(Persistence):
             return self.last_L1, self.last_L2
 
         else:
-            length = self.df.shape[0]
+
+            length = self.df.shape[0] - w_size
             L1, L2 = np.zeros(length), np.zeros(length)
-            for idx in range(w_size, length):
-                array_window = self.df.iloc[idx - w_size: idx, :].values
+            message = f"Compute the norm for a window of {w_size} " \
+                f"on {length} points\n"
+            sys.stdout.write(message + "-"* (len(message) -1) + '\n')
+            sys.stdout.flush()
+            pb = ProgressBar(total = length)
+            for idx in range(length):
+                array_window = self.df.iloc[idx: idx + w_size, :].values
                 rips_complex = gd.RipsComplex(points = array_window)
                 simplex_tree = rips_complex.create_simplex_tree(max_dimension=2)
                 diagram = simplex_tree.persistence(min_persistence=0)
@@ -141,9 +149,10 @@ class Norm(Persistence):
                 norm2 = np.linalg.norm(land)
                 L1[idx] = norm1
                 L2[idx] = norm2
-
-                if idx % 100 ==0:
-                    print(f"{idx}/{length}")
+                next(pb)
+            self.last_w_size = w_size
+            self.last_L1 = L1
+            self.last_L2 = L2
             return L1, L2
 
     @staticmethod
