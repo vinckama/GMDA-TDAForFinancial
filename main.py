@@ -18,10 +18,8 @@ if __name__ == "__main__":
     landscape = Landscape(df_log)
     landscape.visualise('2000-03-10', 80)
 
-    norm = Norm(df_log[:1000])
-    norm.visualise('1988-01-25', '1991-08-06', 20)
+    norm = Norm(df_log)
+    norm.visualise('1989-01-25', '2015-08-06', 50)
 
-    bottleneck = Bottleneck(df_log[:1000])
-    bottleneck.visualise('1988-01-25', '1991-08-06', 20)
-    nn = Norm(df_log)
-    #nn.plot_norm('1997-01-03', '2000-05-10', 50)
+    bottleneck = Bottleneck(df_log)
+    bottleneck.visualise('1989-01-25', '1991-08-06', 50)
