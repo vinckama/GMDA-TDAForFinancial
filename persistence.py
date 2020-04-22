@@ -93,18 +93,26 @@ class Persistence:
             raise IndexError("Your date is not a trading day, it's not in the "
                              "dataframe, please choose another date")
 
+    @staticmethod
+    def verify_w_size(idx, w_size):
+        if idx - w_size + 1 <= 0:
+            raise IndexError(f"w_size > idx ({w_size} > {idx})")
+
 
 class Norm(Persistence):
     """Class to compute the norm of the persistence
     
     """
     sns.set_style("darkgrid")
-    sns.set_palette("PuBuGn_d")
+    sns.set_palette("husl")
 
     def __init__(self, dataframe):
         super().__init__(dataframe)
         self.fig = None
         self. ax1 = None
+        self.last_w_size = None
+        self.last_L1 = None
+        self.last_L2 = None
 
     def get_norms(self, w_size) -> tuple:
         """Compute the series of L1 and L2 norms of persistence landscapes
@@ -116,19 +124,27 @@ class Norm(Persistence):
             L1: Norm 1
             L2: Norm 2
         """
-        length = self.df.shape[0]
-        L1, L2 = np.zeros(length), np.zeros(length)
-        for idx in range(w_size, length):
-            array_window = self.df.iloc[idx-w_size: idx, :].values
-            rips_complex = gd.RipsComplex(points = array_window)
-            simplex_tree = rips_complex.create_simplex_tree(max_dimension=2)
-            diagram = simplex_tree.persistence(min_persistence=0)
-            land = self.persitence_landscape(diagram, 1, 0, 0.08, 1000, 1)
-            norm1 = np.linalg.norm(land, ord=1)
-            norm2 = np.linalg.norm(land)
-            L1[idx] = norm1
-            L2[idx] = norm2
-        return L1, L2
+
+        if w_size == self.last_w_size:
+            return self.last_L1, self.last_L2
+
+        else:
+            length = self.df.shape[0]
+            L1, L2 = np.zeros(length), np.zeros(length)
+            for idx in range(w_size, length):
+                array_window = self.df.iloc[idx - w_size: idx, :].values
+                rips_complex = gd.RipsComplex(points = array_window)
+                simplex_tree = rips_complex.create_simplex_tree(max_dimension=2)
+                diagram = simplex_tree.persistence(min_persistence=0)
+                land = self.persitence_landscape(diagram, 1, 0, 0.08, 1000, 1)
+                norm1 = np.linalg.norm(land, ord=1)
+                norm2 = np.linalg.norm(land)
+                L1[idx] = norm1
+                L2[idx] = norm2
+
+                if idx % 100 ==0:
+                    print(f"{idx}/{length}")
+            return L1, L2
 
     @staticmethod
     def normalize(array) -> np.array:
@@ -186,7 +202,7 @@ class Landscape(Persistence):
     class to compute the landscape of the persistence
     """
     sns.set_style("darkgrid")
-    sns.set_palette("PuBuGn_d")
+    sns.set_palette("husl")
 
     def __init__(self, dataframe):
         super().__init__(dataframe)
@@ -278,9 +294,7 @@ class Landscape(Persistence):
         """
         self.verify_date(end_date)
         idx = self.df.index.get_loc(end_date)
-
-        if idx - w_size + 1 <= 0:
-            raise IndexError(f"w_size > idx ({w_size} > {idx})")
+        self.verify_w_size(idx, w_size)
 
         array_window = self.df.iloc[idx - w_size + 1: idx + 1, :].values
         rips_complex = gd.RipsComplex(points = array_window)
