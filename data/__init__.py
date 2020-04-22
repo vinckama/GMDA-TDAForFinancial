@@ -5,4 +5,4 @@
 """
 
 
-from .LoadData import load_data
+from .LoadData import create_dataset
