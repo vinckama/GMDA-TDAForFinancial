@@ -176,7 +176,7 @@ class Norm(Persistence):
         self.ax1.plot(L1_r_normalized, label = 'L1')
         self.ax1.plot(L2_r_normalized, label = 'L2')
         self.ax1.legend()
-        self.fig.show()
+        plt.show()
 
     def __call__(self, start_date, end_date, w_size) -> tuple:
         """Compute L1 and L2 norms series
@@ -239,7 +239,7 @@ class Landscape(Persistence):
         diagram, land = self.__call__(end_date, w_size)
         gd.plot_persistence_diagram(diagram, axes = self.ax1)
         self.ax2.plot(land[0])
-        self.fig.show()
+        plt.show()
 
     @staticmethod
     def __min_birth_max_death(persistence, band=0.0):
