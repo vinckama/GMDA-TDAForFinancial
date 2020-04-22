@@ -103,116 +103,6 @@ class Persistence:
             raise IndexError(f"w_size > idx ({w_size} > {idx})")
 
 
-class Norm(Persistence):
-    """Class to compute the norm of the persistence
-    
-    """
-    sns.set_style("darkgrid")
-    sns.set_palette("husl")
-
-    def __init__(self, dataframe):
-        super().__init__(dataframe)
-        self.fig = None
-        self. ax1 = None
-        self.last_w_size = None
-        self.last_L1 = None
-        self.last_L2 = None
-
-    def get_norms(self, w_size) -> tuple:
-        """Compute the series of L1 and L2 norms of persistence landscapes
-
-        Parameters:
-            w_size: size of the windows for the landscapes computations
-
-        Returns:
-            L1: Norm 1
-            L2: Norm 2
-        """
-
-        if w_size == self.last_w_size:
-            return self.last_L1, self.last_L2
-
-        else:
-
-            length = self.df.shape[0] - w_size
-            L1, L2 = np.zeros(length), np.zeros(length)
-            message = f"Compute the norm for a window of {w_size} " \
-                f"on {length} points\n"
-            sys.stdout.write(message + "-"* (len(message) -1) + '\n')
-            sys.stdout.flush()
-            pb = ProgressBar(total = length)
-            for idx in range(length):
-                array_window = self.df.iloc[idx: idx + w_size, :].values
-                rips_complex = gd.RipsComplex(points = array_window)
-                simplex_tree = rips_complex.create_simplex_tree(max_dimension=2)
-                diagram = simplex_tree.persistence(min_persistence=0)
-                land = self.persitence_landscape(diagram, 1, 0, 0.08, 1000, 1)
-                norm1 = np.linalg.norm(land, ord=1)
-                norm2 = np.linalg.norm(land)
-                L1[idx] = norm1
-                L2[idx] = norm2
-                next(pb)
-            self.last_w_size = w_size
-            self.last_L1 = L1
-            self.last_L2 = L2
-            return L1, L2
-
-    @staticmethod
-    def normalize(array) -> np.array:
-        return (array-np.min(array)) / (np.max(array)-np.min(array))
-
-    def plot_norm(self, start_date, end_date, w_size):
-        """Plot L1 and L2 norms series
-
-        Parameters:
-            start_date: start date of the period studied
-            end_date: end date of the period studied
-            w_size: size of the windows for the landscapes computation
-        """
-        if self.fig is None:
-            self.fig = plt.figure(' Norm of persistence landscape',
-                                  figsize = (12, 6))
-            self.fig.tight_layout()
-            self.fig.subplots_adjust(left=0.08, right=0.97, top=0.9, bottom=0.1)
-            self.ax1 = self.fig.add_subplot(1, 1, 1)
-            self.ax1.set_title('Normalized L1 and L2 norms of '
-                               'persistence landscapes')
-            locator = mdates.AutoDateLocator(minticks=3, maxticks=7)
-            formatter = mdates.ConciseDateFormatter(locator)
-            self.ax1.xaxis.set_major_locator(locator)
-            self.ax1.xaxis.set_major_formatter(formatter)
-        else:
-            self.ax1.lines = []
-
-        L1_r, L2_r = self.__call__(start_date, end_date, w_size)
-        L1_r_normalized = self.normalize(L1_r)
-        L2_r_normalized = self.normalize(L2_r)
-        dates = pd.to_datetime(self.df.loc[start_date: end_date].index[:-1])
-        self.ax1.plot(dates, L1_r_normalized, label = 'L1')
-        self.ax1.plot(dates, L2_r_normalized, label = 'L2')
-        self.ax1.set_xlim([dates[0], dates[-1]])
-        self.ax1.legend()
-        plt.show()
-
-    def __call__(self, start_date, end_date, w_size) -> tuple:
-        """Compute L1 and L2 norms series
-
-        Parameters:
-            start_date: start date of the period studied
-            end_date: end date of the period studied
-            w_size: size of the windows for the landscapes computation
-        """
-        self.verify_date(start_date)
-        self.verify_date(end_date)
-
-        L1, L2 = self.get_norms(w_size)
-        idx_start = self.df.index.get_loc(start_date)
-        idx_end = self.df.index.get_loc(end_date)
-        L1_r = L1[idx_start:idx_end]
-        L2_r = L2[idx_start:idx_end]
-        return L1_r, L2_r
-
-
 class Landscape(Persistence):
     """
     class to compute the landscape of the persistence
@@ -226,7 +116,7 @@ class Landscape(Persistence):
         self.ax1 = None
         self.ax2 = None
 
-    def plot_landscape(self, end_date, w_size) -> None:
+    def visualise(self, end_date, w_size) -> None:
         """"
         plot persistence and its landscape
 
@@ -256,6 +146,8 @@ class Landscape(Persistence):
         gd.plot_persistence_diagram(diagram, axes = self.ax1)
         self.ax2.plot(land[0])
         plt.show()
+        sys.stdout.write(f'Plot Persistence graphs\n')
+        sys.stdout.flush()
 
     @staticmethod
     def __min_birth_max_death(persistence, band=0.0):
@@ -323,3 +215,225 @@ class Landscape(Persistence):
         return diagram, land
 
 
+class Norm(Persistence):
+    """Class to compute the norm of the persistence
+
+    """
+    sns.set_style("darkgrid")
+    sns.set_palette("husl")
+
+    def __init__(self, dataframe):
+        super().__init__(dataframe)
+        self.fig = None
+        self. ax1 = None
+        self.last_w_size = None
+        self.last_L1 = None
+        self.last_L2 = None
+
+    def get_norms(self, w_size) -> tuple:
+        """Compute the series of L1 and L2 norms of persistence landscapes
+
+        Parameters:
+            w_size: size of the windows for the landscapes computations
+
+        Returns:
+            L1: Norm 1
+            L2: Norm 2
+        """
+
+        if w_size == self.last_w_size:
+            return self.last_L1, self.last_L2
+
+        length = self.df.shape[0] - w_size
+        L1, L2 = np.zeros(self.df.shape[0]), np.zeros(self.df.shape[0])
+
+        message = f"Compute the norm for a window of {w_size} " \
+            f"on {length} points\n"
+        sys.stdout.write(message + "-"* (len(message) -1) + '\n')
+        sys.stdout.flush()
+        pb = ProgressBar(total = length)
+
+        for idx in range(length):
+            array_window = self.df.iloc[idx: idx + w_size, :].values
+            rips_complex = gd.RipsComplex(points = array_window)
+            simplex_tree = rips_complex.create_simplex_tree(max_dimension=2)
+            diagram = simplex_tree.persistence(min_persistence=0)
+            land = self.persitence_landscape(diagram, 1, 0, 0.08, 1000, 1)
+            norm1 = np.linalg.norm(land, ord=1)
+            norm2 = np.linalg.norm(land)
+            L1[idx + w_size] = norm1
+            L2[idx + w_size] = norm2
+            next(pb)
+
+        self.last_w_size = w_size
+        self.last_L1 = L1
+        self.last_L2 = L2
+        return L1, L2
+
+    @staticmethod
+    def normalize(array) -> np.array:
+        return (array-np.min(array)) / (np.max(array)-np.min(array))
+
+    def visualise(self, start_date, end_date, w_size):
+        """Plot L1 and L2 norms series on a time window
+
+        Parameters:
+            start_date: start date of the period studied
+            end_date: end date of the period studied
+            w_size: size of the windows for the landscapes computation
+        """
+        if self.fig is None:
+            self.fig = plt.figure('Norm of persistence landscape',
+                                  figsize = (12, 6))
+            self.fig.tight_layout()
+            self.fig.subplots_adjust(left=0.08, right=0.97, top=0.9, bottom=0.1)
+            self.ax1 = self.fig.add_subplot(1, 1, 1)
+            self.ax1.set_title('Normalized L1 and L2 norms of '
+                               'persistence landscape')
+            locator = mdates.AutoDateLocator(minticks=3, maxticks=7)
+            formatter = mdates.ConciseDateFormatter(locator)
+            self.ax1.xaxis.set_major_locator(locator)
+            self.ax1.xaxis.set_major_formatter(formatter)
+        else:
+            self.ax1.lines = []
+
+        L1_r, L2_r = self.__call__(start_date, end_date, w_size)
+        L1_r_normalized = self.normalize(L1_r)
+        L2_r_normalized = self.normalize(L2_r)
+        dates = pd.to_datetime(self.df.loc[start_date: end_date].index[:-1])
+        self.ax1.plot(dates, L1_r_normalized, label = 'L1')
+        self.ax1.plot(dates, L2_r_normalized, label = 'L2')
+        self.ax1.set_xlim([dates[0], dates[-1]])
+        self.ax1.legend()
+        plt.show()
+        sys.stdout.write(f'Plot norm of persistence landscape\n')
+        sys.stdout.flush()
+
+    def __call__(self, start_date, end_date, w_size) -> tuple:
+        """Compute L1 and L2 norms series on a time window
+
+        Parameters:
+            start_date: start date of the period studied
+            end_date: end date of the period studied
+            w_size: size of the windows for the landscapes computation
+        """
+        self.verify_date(start_date)
+        self.verify_date(end_date)
+
+        idx_start = self.df.index.get_loc(start_date)
+        idx_end = self.df.index.get_loc(end_date)
+        self.verify_w_size(idx_start, w_size)
+
+        L1, L2 = self.get_norms(w_size)
+        L1_r = L1[idx_start:idx_end]
+        L2_r = L2[idx_start:idx_end]
+        return L1_r, L2_r
+
+
+class Bottleneck(Persistence):
+    """Class to compute the bottleneck distance
+
+    """
+    sns.set_style("darkgrid")
+    sns.set_palette("husl")
+
+    def __init__(self, dataframe):
+        super().__init__(dataframe)
+        self.fig = None
+        self. ax1 = None
+        self.last_w_size = None
+        self.last_bottleneck = None
+
+    def get_bottleneck_distance(self, w_size):
+        """Compute bottleneck distance of persistence landscape
+
+        Parameters:
+            w_size: size of the windows for the landscapes computations
+
+        Returns:
+            bottleneck: bottleneck distance
+        """
+        if w_size == self.last_w_size:
+            return self.last_bottleneck
+
+        length = self.df.shape[0] - w_size
+        bottleneck = np.zeros(self.df.shape[0])
+        prev_diagram_b = None
+
+        message = f"Compute the bottleneck distance for a window of {w_size} " \
+                f"on {length} points\n"
+        sys.stdout.write(message + "-"* (len(message) -1) + '\n')
+        sys.stdout.flush()
+        pb = ProgressBar(total = length)
+
+        for idx in range(length):
+            array_window = self.df.iloc[idx: idx + w_size, :].values
+            rips_complex = gd.RipsComplex(points = array_window)
+            simplex_tree = rips_complex.create_simplex_tree(max_dimension=2)
+            current_diagram = simplex_tree.persistence(min_persistence=0)
+
+            current_diagram_b = []
+            for i in range(len(current_diagram)):
+                if current_diagram[i][0] == 1:
+                    current_diagram_b.append([current_diagram[i][1][0],
+                                              current_diagram[i][1][1]])
+
+            if prev_diagram_b != None:
+                dist = gd.bottleneck_distance(current_diagram_b, prev_diagram_b)
+                bottleneck[idx + w_size] = dist
+            prev_diagram_b = current_diagram_b
+            next(pb)
+
+        self.last_w_size = w_size
+        self.last_bottleneck = bottleneck
+        return bottleneck
+
+    def visualise(self, start_date, end_date, w_size):
+        """Plot bottleneck distance on a time window
+
+        Parameters:
+            start_date: start date of the period studied
+            end_date: end date of the period studied
+            w_size: size of the windows for the landscapes computation
+        """
+        if self.fig is None:
+            self.fig = plt.figure('Bottleneck of persistence landscape',
+                                  figsize = (12, 6))
+            self.fig.tight_layout()
+            self.fig.subplots_adjust(left=0.08, right=0.97, top=0.9, bottom=0.1)
+            self.ax1 = self.fig.add_subplot(1, 1, 1)
+            self.ax1.set_title('Bottleneck distance of '
+                               'persistence landscape')
+            locator = mdates.AutoDateLocator(minticks=3, maxticks=7)
+            formatter = mdates.ConciseDateFormatter(locator)
+            self.ax1.xaxis.set_major_locator(locator)
+            self.ax1.xaxis.set_major_formatter(formatter)
+        else:
+            self.ax1.lines = []
+
+        bottleneck_r = self.__call__(start_date, end_date, w_size)
+        dates = pd.to_datetime(self.df.loc[start_date: end_date].index[:-1])
+        self.ax1.plot(dates, bottleneck_r)
+        self.ax1.set_xlim([dates[0], dates[-1]])
+        plt.show()
+        sys.stdout.write(f'Plot norm of bottleneck distance\n')
+        sys.stdout.flush()
+
+    def __call__(self, start_date, end_date, w_size) -> tuple:
+        """Compute bottleneck distance on a time window
+
+        Parameters:
+            start_date: start date of the period studied
+            end_date: end date of the period studied
+            w_size: size of the windows for the landscapes computation
+        """
+        self.verify_date(start_date)
+        self.verify_date(end_date)
+
+        idx_start = self.df.index.get_loc(start_date)
+        idx_end = self.df.index.get_loc(end_date)
+        self.verify_w_size(idx_start, w_size)
+
+        bottleneck = self.get_bottleneck_distance(w_size)
+        bottleneck_r = bottleneck[idx_start:idx_end]
+        return bottleneck_r
