@@ -6,9 +6,8 @@
 
 from data import load_data
 import matplotlib.pyplot as plt
-import seaborn as sns
 import math
-from persistence import Persistance
+from persistence import Landscape, Norm
 
 
 def visualise(df):
@@ -33,12 +32,13 @@ def log_df(df):
     return ratio_df.applymap(lambda x: math.log(x))
 
 
-
-
 if __name__ == "__main__":
     df = load_data()
     # visualise(df)
     df_log = log_df(df)
     # visualise(df_log)
-    aa = Persistance(df_log)
-    aa('2000-03-10', 80)
+    aa = Landscape(df_log)
+    #aa('2000-03-10', 80)
+
+    nn = Norm(df_log)
+    #nn('1997-01-03', '2000-05-10', 50)
