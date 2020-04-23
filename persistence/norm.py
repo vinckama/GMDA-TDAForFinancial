@@ -266,4 +266,4 @@ class Norm(Persistence):
         if test or not plot:
             self.test_crash(L1_stats, L2_stats, crash_date)
         if plot:
-            self.visualise_crash( L1_stats, L2_stats, crash_date)
+            self.visualise_crash(L1_stats, L2_stats, crash_date)

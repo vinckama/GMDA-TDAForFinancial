@@ -12,6 +12,8 @@ import matplotlib.dates as mdates
 import seaborn as sns
 import sys
 from math import log
+import requests
+import io
 
 
 class DataLoader:
@@ -34,9 +36,9 @@ class DataLoader:
 
     @staticmethod
     def download_data(url):
-        re = requests.get(url)
+        re = requests.get(url, verify=False)
         if re.ok:
-            return pd.read_csv(re.content)
+            return pd.read_csv(io.StringIO(re.content.decode()))
         else:
             return None
         
@@ -49,9 +51,11 @@ class DataLoader:
         data_path_files= listdir(self.DATA_PATH)
         for dataset in self.dataset_dict.keys():
             if f'{dataset}.csv' not in data_path_files:
-                df = None #self.download_data(self.dataset_dict[dataset])
+                df = self.download_data(self.dataset_dict[dataset])
                 if df is not None:
-                    df.to_csv(f'{dataset}.csv')
+                    sys.stdout.write(f'{dataset} downloaded\n')
+                    sys.stdout.flush()
+                    df.to_csv(path.join(self.DATA_PATH, f'{dataset}.csv'))
                 else:
                     raise FileNotFoundError(f"Please add '{dataset}.csv' "
                                             f"in the '{self.DATA_PATH}' folder")
