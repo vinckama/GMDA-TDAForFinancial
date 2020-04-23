@@ -14,77 +14,99 @@ import sys
 from math import log
 
 
-DATA_PATH = 'GMDA_data'
-dataset_list = [
-    'DowJones',
-    'Nasdaq',
-    'Russell2000',
-    'SP500'
-]
+class DataLoader:
+    DATA_PATH = 'GMDA_data'
+    dataset_dict = {
+    'DowJones':'https://geometrica.saclay.inria.fr/team/Fred.Chazal'
+               '/Projects/TDAFinancialTimeSeries/Yahoo_finance/DowJones.csv',
+    'Nasdaq':'https://geometrica.saclay.inria.fr/team/Fred.Chazal'
+             '/Projects/TDAFinancialTimeSeries/Yahoo_finance/Nasdaq.csv',
+    'Russell2000':'https://geometrica.saclay.inria.fr/team/Fred.Chazal'
+                  '/Projects/TDAFinancialTimeSeries/Yahoo_finance'
+                  '/Russell2000.csv',
+    'SP500':'https://geometrica.saclay.inria.fr/team/Fred.Chazal'
+            '/Projects/TDAFinancialTimeSeries/Yahoo_finance/SP500.csv',
+}
 
+    def __init__(self):
+        self.df = self.create_dataset()
+        self.log_df = self.create_log_df()
 
-def verify_data_path():
-    if not path.exists(DATA_PATH):
-        mkdir(DATA_PATH)
-        sys.stdout.write(f"Creating the folder '{DATA_PATH}' to hold the data.")
+    @staticmethod
+    def download_data(url):
+        re = requests.get(url)
+        if re.ok:
+            return pd.read_csv(re.content)
+        else:
+            return None
+        
+    def verify_data_path(self):
+        if not path.exists(self.DATA_PATH):
+            mkdir(self.DATA_PATH)
+            sys.stdout.write(f"Creating the folder '{self.DATA_PATH}'"
+                             f" to hold the data.")
+            sys.stdout.flush()
+        data_path_files= listdir(self.DATA_PATH)
+        for dataset in self.dataset_dict.keys():
+            if f'{dataset}.csv' not in data_path_files:
+                df = None #self.download_data(self.dataset_dict[dataset])
+                if df is not None:
+                    df.to_csv(f'{dataset}.csv')
+                else:
+                    raise FileNotFoundError(f"Please add '{dataset}.csv' "
+                                            f"in the '{self.DATA_PATH}' folder")
+
+    def load_dataset(self, file_name):
+        file_full_name = f'.{file_name}.csv'
+        if file_full_name in listdir(self.DATA_PATH):
+            df = DateDataFrame(
+                pd.read_csv(path.join(self.DATA_PATH, file_full_name)))
+            df.set_index('Date', inplace = True)
+            return df
+        return None
+
+    def save_dataset(self, df, file_name):
+        df.to_csv(path.join(self.DATA_PATH, f'.{file_name}.csv'))
+
+    def create_dataset(self):
+        self.verify_data_path()
+        saved_df = self.load_dataset("data_df")
+        if saved_df is not None:
+            return saved_df
+        sys.stdout.write("Create the dataset\n")
         sys.stdout.flush()
-    data_path_files= listdir(DATA_PATH)
-    for dataset in dataset_list:
-        if f'{dataset}.csv' not in data_path_files:
-            raise FileNotFoundError(f"Please add '{dataset}.csv' "
-                                    f"in the '{DATA_PATH}' folder")
 
+        df_dict = dict()
+        for dataset in self.dataset_dict.keys():
+            df = pd.read_csv(path.join(self.DATA_PATH, f"{dataset}.csv"),
+                                      header=0, delimiter=",")
+            df_dict[dataset] = df['Adj Close']
+            index = df['Date']
 
-def create_dataset():
-    verify_data_path()
-    saved_df = load_dataset("data_df")
-    if saved_df is not None:
-        return saved_df
-    sys.stdout.write("Create the dataset\n")
-    sys.stdout.flush()
+        for (name, df) in df_dict.items():
+            df_dict[name] = np.asarray(df)
 
-    df_dict = dict()
-    for dataset in dataset_list:
-        df = pd.read_csv(path.join(DATA_PATH, f"{dataset}.csv"),
-                                  header=0, delimiter=",")
-        df_dict[dataset] = df['Adj Close']
-        index = df['Date']
+        data_df = DateDataFrame(df_dict, index = index)[:1000] #################################@
+        data_df.sort_index(inplace = True)
+        self.save_dataset(data_df, 'data_df')
+        return data_df
 
-    for (name, df) in df_dict.items():
-        df_dict[name] = np.asarray(df)
+    def create_log_df(self):
+        saved_df = self.load_dataset("ratio_df")
+        if saved_df is not None:
+            return saved_df
+        sys.stdout.write("Create the ratio-dataset\n")
+        sys.stdout.flush()
 
-    data_df = DateDataFrame(df_dict, index = index)
-    data_df.sort_index(inplace = True)
-    save_dataset(data_df, 'data_df')
-    return data_df
+        shifted_df = self.df.shift(-1)
+        ratio_df = self.df / shifted_df
+        ratio_df.dropna(inplace = True)
+        ratio_df = ratio_df.applymap(lambda x: log(x))
+        self.save_dataset(ratio_df, 'ratio_df')
+        return ratio_df
 
-
-def load_dataset(file_name):
-    file_full_name= f'.{file_name}.csv'
-    if file_full_name in listdir(DATA_PATH):
-        df = DateDataFrame(pd.read_csv(path.join(DATA_PATH, file_full_name)))
-        df.set_index('Date', inplace = True)
-        return df
-    return None
-
-
-def save_dataset(df, file_name):
-    df.to_csv(path.join(DATA_PATH, f'.{file_name}.csv'))
-
-
-def log_df(df):
-    saved_df = load_dataset("ratio_df")
-    if saved_df is not None:
-        return saved_df
-    sys.stdout.write("Create the ratio-dataset\n")
-    sys.stdout.flush()
-
-    shifted_df = df.shift(-1)
-    ratio_df = df / shifted_df
-    ratio_df.dropna(inplace = True)
-    ratio_df =ratio_df.applymap(lambda x: log(x))
-    save_dataset(ratio_df, 'ratio_df')
-    return ratio_df
+    def __call__(self):
+        return self.df, self.log_df
 
 
 class DateDataFrame(pd.DataFrame, ABC):
