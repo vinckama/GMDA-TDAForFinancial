@@ -133,3 +133,56 @@ class Bottleneck(Persistence):
         bottleneck_r = pd.DataFrame(bottleneck_r, index = dates,
                                     columns = ['bottleneck'])
         return bottleneck_r
+
+    def visualise_crash(self, x_date, bn_stats, crash_date, save=''):
+        (V, SD, AC) = bn_stats
+
+        fig = plt.figure("Crash information", figsize=(12, 6))
+        locator = mdates.AutoDateLocator(minticks=3, maxticks=7)
+        formatter = mdates.ConciseDateFormatter(locator)
+        fig.suptitle('Crash information using bottleneck distance')
+        ax = fig.add_subplot(1, 3, 1)
+        ax.plot(x_date, V)
+        ax.set_title('Variance')
+        ax.xaxis.set_major_locator(locator)
+        ax.xaxis.set_major_formatter(formatter)
+
+        ax = fig.add_subplot(1, 3, 2)
+        ax.plot(x_date, SD)
+        ax.set_title('Spectrum')
+        ax.xaxis.set_major_locator(locator)
+        ax.xaxis.set_major_formatter(formatter)
+
+        ax = fig.add_subplot(1, 3, 3)
+        ax.plot(x_date, AC)
+        ax.set_title('ACF(1)')
+        ax.xaxis.set_major_locator(locator)
+        ax.xaxis.set_major_formatter(formatter)
+
+        sys.stdout.write(f'Plot stats of the crash ({crash_date})\n')
+        sys.stdout.flush()
+        plt.draw()
+        if save:
+            self.fig.savefig(save)
+        plt.pause(0.001)
+        input("Press [enter] to continue.")
+
+    def crash_stats(self, w_size, crash_year='2000', test=False, plot=False,
+                    save=''):
+        crash_dict = {
+            '2000': '2000-03-10',
+            '2008': '2008-09-15'
+        }
+        crash_date = crash_dict[crash_year]
+        idx_crash = self.df.index.get_loc(crash_date)
+        x_date = pd.to_datetime(self.df.index[idx_crash - 250: idx_crash])
+
+        bn = self.get_bottleneck_distance(w_size)
+        bn_stats = self.compute_stats(bn)
+
+        bn_stats = [stat[idx_crash - 250: idx_crash] for stat in bn_stats]
+
+        if test or not plot:
+            self.test_crash(bn_stats, crash_date, 'Bottleneck distance')
+        if plot:
+            self.visualise_crash(x_date, bn_stats, crash_date, save)

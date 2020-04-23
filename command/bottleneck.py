@@ -75,5 +75,34 @@ Subcommands are:
         args = parser.parse_args(sys.argv[3:])
         self.bottleneck(int(args.w_size), args.start_date,  args.end_date)
 
+    def crash_stats(self):
+        parser = argparse.ArgumentParser(
+            description = 'get and plot statistics on crashs')
+        # prefixing the argument with -- means it's optional
+        parser.add_argument(
+            '-w_size',
+            help = 'size of the windows for the landscapes computations',
+            required = True)
+
+        parser.add_argument(
+            '-year',
+            help='year of the crash',
+            choices = ['2000', '2008'],
+            required = True)
+
+        parser.add_argument('--test', help='plot statistics',
+                    action='store_true')
+
+        parser.add_argument('--plot', help='compute mann kendall test',
+                    action='store_true')
+
+        parser.add_argument('--save',
+                            help='location where you want to save graphs',
+                            default='')
+
+        args = parser.parse_args(sys.argv[3:])
+        self.bottleneck.crash_stats(int(args.w_size), args.year, args.test,
+                                    args.plot, args.save)
+
     def clean(self):
         self.bottleneck.clean_dataset()

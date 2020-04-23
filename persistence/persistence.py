@@ -158,11 +158,12 @@ class Persistence:
     @staticmethod
     def test_crash(norm_stats, crash_date, norm_name):
         (V, SD, AC) = norm_stats
+
         sys.stdout.write(f"Results of the Mann Kendall Test "
-                         f"for the {norm_name}-norm (crash: {crash_date}): \n")
+                         f"for the {norm_name} (crash: {crash_date}): \n")
         MKV = mk.original_test(V)
         sys.stdout.write(
-            f"Variance:          trend = {MKV.trend} |  tau = {MKV.Tau:0.4f}\n")
+            f"Variance:          trend = {MKV.trend} | tau = {MKV.Tau:0.4f}\n")
         MKSD = mk.original_test(SD)
         sys.stdout.write(
             f"Spectral Density:  trend = {MKSD.trend} | tau = {MKSD.Tau:0.4f}\n")

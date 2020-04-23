@@ -138,30 +138,28 @@ class Norm(Persistence):
         L2_r = pd.DataFrame(L2_r, index = dates, columns = ['L2'])
         return L1_r, L2_r
 
-    def visualise_crash(self, L1_stats, L2_stats, crash_date, save=''):
+    def visualise_crash(self, x_date, L1_stats, L2_stats, crash_date, save=''):
         (V1, SD1, AC1) = L1_stats
         (V2, SD2, AC2) = L2_stats
-        idx_crash = self.df.index.get_loc(crash_date)
-        x_date = pd.to_datetime(self.df.index[idx_crash - 250: idx_crash])
 
-        fig = plt.figure(figsize=(12, 6))
+        fig = plt.figure("Crash information", figsize=(12, 6))
         locator = mdates.AutoDateLocator(minticks=3, maxticks=7)
         formatter = mdates.ConciseDateFormatter(locator)
 
         ax = fig.add_subplot(2, 3, 1)
-        ax.plot(x_date, V1[idx_crash - 250: idx_crash])
+        ax.plot(x_date, V1)
         ax.set_title('Variance L1')
         ax.xaxis.set_major_locator(locator)
         ax.xaxis.set_major_formatter(formatter)
 
         ax = fig.add_subplot(2, 3, 2)
-        ax.plot(x_date, SD1[idx_crash - 250: idx_crash])
+        ax.plot(x_date, SD1)
         ax.set_title('Spectrum L1')
         ax.xaxis.set_major_locator(locator)
         ax.xaxis.set_major_formatter(formatter)
 
         ax = fig.add_subplot(2, 3, 3)
-        ax.plot(x_date, AC1[idx_crash - 250: idx_crash])
+        ax.plot(x_date, AC1)
         ax.set_title('ACF(1) L1')
         ax.xaxis.set_major_locator(locator)
         ax.xaxis.set_major_formatter(formatter)
@@ -169,24 +167,24 @@ class Norm(Persistence):
         color = sns.husl_palette()[2]
 
         ax = fig.add_subplot(2, 3, 4)
-        ax.plot(x_date, V2[idx_crash - 250: idx_crash], color = color)
+        ax.plot(x_date, V2, color = color)
         ax.set_title('Variance L2')
         ax.xaxis.set_major_locator(locator)
         ax.xaxis.set_major_formatter(formatter)
 
         ax = fig.add_subplot(2, 3, 5)
-        ax.plot(x_date, SD2[idx_crash - 250: idx_crash], color = color)
+        ax.plot(x_date, SD2, color = color)
         ax.set_title('Spectrum L2')
         ax.xaxis.set_major_locator(locator)
         ax.xaxis.set_major_formatter(formatter)
 
         ax = fig.add_subplot(2, 3, 6)
-        ax.plot(x_date, AC2[idx_crash - 250: idx_crash], color = color)
+        ax.plot(x_date, AC2, color = color)
         ax.set_title('ACF(1) L2')
         ax.xaxis.set_major_locator(locator)
         ax.xaxis.set_major_formatter(formatter)
 
-        sys.stdout.write(f'Plot norm of persistence landscape\n')
+        sys.stdout.write(f'Plot stats of the crash ({crash_date})\n')
         sys.stdout.flush()
         plt.draw()
         if save:
@@ -196,18 +194,23 @@ class Norm(Persistence):
 
     def crash_stats(self, w_size, crash_year='2000', test=False, plot=False,
                     save=''):
-        L1, L2 = self.get_norms(w_size)
-        L1_stats = self.compute_stats(L1)
-        L2_stats = self.compute_stats(L2)
-
         crash_dict = {
             '2000': '2000-03-10',
             '2008': '2008-09-15'
         }
         crash_date = crash_dict[crash_year]
+        idx_crash = self.df.index.get_loc(crash_date)
+        x_date = pd.to_datetime(self.df.index[idx_crash - 250: idx_crash])
+
+        L1, L2 = self.get_norms(w_size)
+        L1_stats = self.compute_stats(L1)
+        L2_stats = self.compute_stats(L2)
+
+        L1_stats = [stat[idx_crash - 250: idx_crash] for stat in L1_stats]
+        L2_stats = [stat[idx_crash - 250: idx_crash] for stat in L2_stats]
 
         if test or not plot:
-            self.test_crash(L1_stats, crash_date, 'L1')
-            self.test_crash(L2_stats, crash_date, 'L2')
+            self.test_crash(L1_stats, crash_date, 'L1-norm')
+            self.test_crash(L2_stats, crash_date, 'L2-norm')
         if plot:
-            self.visualise_crash(L1_stats, L2_stats, crash_date, save)
+            self.visualise_crash(x_date, L1_stats, L2_stats, crash_date, save)

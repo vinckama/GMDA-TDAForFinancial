@@ -90,7 +90,7 @@ class DataLoader:
         for (name, df) in df_dict.items():
             df_dict[name] = np.asarray(df)
 
-        data_df = DateDataFrame(df_dict, index = index)[:1000] #################################@
+        data_df = DateDataFrame(df_dict, index = index) #[:1000] #################################@
         data_df.sort_index(inplace = True)
         self.save_dataset(data_df, 'data_df')
         return data_df
