@@ -5,13 +5,16 @@
 """
 from math import log
 import sys
+import pkg_resources
 
 
-def log_df(df):
-    shifted_df = df.shift(-1)
-    ratio_df = df / shifted_df
-    ratio_df.dropna(inplace = True)
-    return ratio_df.applymap(lambda x: log(x))
+def verify_lib(library):
+    installed_pkg = [pkg.key for pkg in pkg_resources.working_set]
+    if library not in installed_pkg:
+        raise ModuleNotFoundError(
+            f"Please install '{library}' library "
+            f"using 'conda {library} install'")
+
 
 
 class ProgressBar:
