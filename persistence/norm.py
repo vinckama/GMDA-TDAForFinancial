@@ -12,8 +12,7 @@ import gudhi as gd
 import sys
 from .persistence import Persistence
 from utils import ProgressBar
-from scipy import signal
-import pymannkendall as mk
+
 
 class Norm(Persistence):
     """Class to compute the norm of the persistence
@@ -139,33 +138,6 @@ class Norm(Persistence):
         L2_r = pd.DataFrame(L2_r, index = dates, columns = ['L2'])
         return L1_r, L2_r
 
-    def variance(self, norm):
-        V = np.zeros(self.df.shape[0])
-        for idx in range(500, self.df.shape[0]):
-            L_window = norm[idx-500: idx]
-            var = np.var(L_window)
-            V[idx] = var
-        return V
-
-    def av_spectral_density(self, norm):
-        SD = np.zeros(self.df.shape[0])
-        for idx in range(500, self.df.shape[0]):
-            L_window = norm[idx-500: idx]
-            f, Pxx_den = signal.periodogram(L_window)
-            f, Pxx_den = np.delete(f, 0), np.delete(Pxx_den, 0)
-            f, Pxx_den = f[0:len(f) // 8], Pxx_den[0:len(f) // 8]
-            SD[idx] = np.mean(Pxx_den)
-        return SD
-
-    def acf_firstlag(self, norm):
-        AC = np.zeros(self.df.shape[0])
-        for idx in range(500, self.df.shape[0]):
-            L_window = norm[idx-500:idx]
-            acf = np.correlate(L_window, L_window, mode='full')
-            acf = acf[acf.size // 2:]
-            AC[idx] = acf[1]
-        return AC
-
     def visualise_crash(self, L1_stats, L2_stats, crash_date, save=''):
         (V1, SD1, AC1) = L1_stats
         (V2, SD2, AC2) = L2_stats
@@ -222,40 +194,6 @@ class Norm(Persistence):
         plt.pause(0.001)
         input("Press [enter] to continue.")
 
-    def test_crash(self, L1_stats, L2_stats, crash_date):
-        (V1, SD1, AC1) = L1_stats
-        (V2, SD2, AC2) = L2_stats
-
-        sys.stdout.write(f"Results of the Mann Kendall Test "
-                         f"for the L1-norm (crash: {crash_date}): \n")
-        MKV1 = mk.original_test(V1)
-        sys.stdout.write(
-            f"Variance:          trend = {MKV1.trend} |  tau = {MKV1.Tau:0.4f}\n")
-        MKSD1 = mk.original_test(SD1)
-        sys.stdout.write(
-            f"Spectral Density:  trend = {MKSD1.trend} | tau = {MKSD1.Tau:0.4f}\n")
-        MKAC1 = mk.original_test(AC1)
-        sys.stdout.write(
-            f"Autocorrelation:   trend = {MKAC1.trend} | tau = {MKAC1.Tau:0.4f}\n\n")
-
-        sys.stdout.write(f"Results of the Mann Kendall Test "
-                         f"for the L2-norm (crash: {crash_date}): \n")
-        MKV2 = mk.original_test(V2)
-        sys.stdout.write(
-            f"Variance:           trend = {MKV2.trend} | tau = {MKV2.Tau:0.4f}\n")
-        MKSD2 = mk.original_test(SD2)
-        sys.stdout.write(
-            f"Spectral Density:   trend = {MKSD2.trend} | tau = {MKSD2.Tau:0.4f}\n")
-        MKAC2 = mk.original_test(AC2)
-        sys.stdout.write(
-            f"Autocorrelation:    trend = {MKAC2.trend} | tau = {MKAC2.Tau:0.4f}\n\n")
-
-    def compute_stats(self, norm):
-        V = self.variance(norm)
-        SD = self.av_spectral_density(norm)
-        AC = self.acf_firstlag(norm)
-        return V, SD, AC
-
     def crash_stats(self, w_size, crash_year='2000', test=False, plot=False,
                     save=''):
         L1, L2 = self.get_norms(w_size)
@@ -269,6 +207,7 @@ class Norm(Persistence):
         crash_date = crash_dict[crash_year]
 
         if test or not plot:
-            self.test_crash(L1_stats, L2_stats, crash_date)
+            self.test_crash(L1_stats, crash_date, 'L1')
+            self.test_crash(L2_stats, crash_date, 'L2')
         if plot:
             self.visualise_crash(L1_stats, L2_stats, crash_date, save)

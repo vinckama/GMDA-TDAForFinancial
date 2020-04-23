@@ -48,7 +48,6 @@ Subcommands are:
                             default='')
 
         args = parser.parse_args(sys.argv[3:])
-        print(args)
         if args.log:
             self.df_log.visualise_subplots(save = args.save)
         else:

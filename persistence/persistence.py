@@ -9,7 +9,9 @@ import numpy as np
 import re
 from os import path, mkdir, listdir
 from shutil import rmtree
-
+from scipy import signal
+import sys
+import pymannkendall as mk
 
 class Persistence:
     """Base class for persistence computations
@@ -100,6 +102,8 @@ class Persistence:
 
     @staticmethod
     def verify_w_size(idx, w_size):
+        if w_size<=0:
+            raise IndexError(f"w_size must be positive")
         if idx - w_size + 1 <= 0:
             raise IndexError(f"w_size > idx ({w_size} > {idx})")
 
@@ -117,3 +121,51 @@ class Persistence:
         if path.exists(self.DATA_PATH):
             rmtree(self.DATA_PATH)
             mkdir(self.DATA_PATH)
+
+    def variance(self, norm):
+        V = np.zeros(self.df.shape[0])
+        for idx in range(500, self.df.shape[0]):
+            L_window = norm[idx - 500: idx]
+            var = np.var(L_window)
+            V[idx] = var
+        return V
+
+    def av_spectral_density(self, norm):
+        SD = np.zeros(self.df.shape[0])
+        for idx in range(500, self.df.shape[0]):
+            L_window = norm[idx - 500: idx]
+            f, Pxx_den = signal.periodogram(L_window)
+            f, Pxx_den = np.delete(f, 0), np.delete(Pxx_den, 0)
+            f, Pxx_den = f[0:len(f) // 8], Pxx_den[0:len(f) // 8]
+            SD[idx] = np.mean(Pxx_den)
+        return SD
+
+    def acf_firstlag(self, norm):
+        AC = np.zeros(self.df.shape[0])
+        for idx in range(500, self.df.shape[0]):
+            L_window = norm[idx - 500: idx]
+            acf = np.correlate(L_window, L_window, mode='full')
+            acf = acf[acf.size // 2:]
+            AC[idx] = acf[1]
+        return AC
+
+    def compute_stats(self, norm):
+        V = self.variance(norm)
+        SD = self.av_spectral_density(norm)
+        AC = self.acf_firstlag(norm)
+        return V, SD, AC
+
+    @staticmethod
+    def test_crash(norm_stats, crash_date, norm_name):
+        (V, SD, AC) = norm_stats
+        sys.stdout.write(f"Results of the Mann Kendall Test "
+                         f"for the {norm_name}-norm (crash: {crash_date}): \n")
+        MKV = mk.original_test(V)
+        sys.stdout.write(
+            f"Variance:          trend = {MKV.trend} |  tau = {MKV.Tau:0.4f}\n")
+        MKSD = mk.original_test(SD)
+        sys.stdout.write(
+            f"Spectral Density:  trend = {MKSD.trend} | tau = {MKSD.Tau:0.4f}\n")
+        MKAC = mk.original_test(AC)
+        sys.stdout.write(
+            f"Autocorrelation:   trend = {MKAC.trend} | tau = {MKAC.Tau:0.4f}\n\n")
