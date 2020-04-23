@@ -72,7 +72,7 @@ class Norm(Persistence):
     def normalize(array) -> np.array:
         return (array-np.min(array)) / (np.max(array)-np.min(array))
 
-    def visualise(self, w_size, start_date=None, end_date=None):
+    def visualise(self, w_size, start_date=None, end_date=None, save=''):
         """Plot L1 and L2 norms series on a time window
 
         Parameters:
@@ -106,6 +106,8 @@ class Norm(Persistence):
         sys.stdout.write(f'Plot norm of persistence landscape\n')
         sys.stdout.flush()
         plt.draw()
+        if save:
+            self.fig.savefig(save)
         plt.pause(0.001)
         input("Press [enter] to continue.")
 
@@ -164,7 +166,7 @@ class Norm(Persistence):
             AC[idx] = acf[1]
         return AC
 
-    def visualise_crash(self, L1_stats, L2_stats, crash_date):
+    def visualise_crash(self, L1_stats, L2_stats, crash_date, save=''):
         (V1, SD1, AC1) = L1_stats
         (V2, SD2, AC2) = L2_stats
         idx_crash = self.df.index.get_loc(crash_date)
@@ -215,6 +217,8 @@ class Norm(Persistence):
         sys.stdout.write(f'Plot norm of persistence landscape\n')
         sys.stdout.flush()
         plt.draw()
+        if save:
+            self.fig.savefig(save)
         plt.pause(0.001)
         input("Press [enter] to continue.")
 
@@ -252,7 +256,8 @@ class Norm(Persistence):
         AC = self.acf_firstlag(norm)
         return V, SD, AC
 
-    def crash_stats(self, w_size, crash_year='2000', test=False, plot=False):
+    def crash_stats(self, w_size, crash_year='2000', test=False, plot=False,
+                    save=''):
         L1, L2 = self.get_norms(w_size)
         L1_stats = self.compute_stats(L1)
         L2_stats = self.compute_stats(L2)
@@ -266,4 +271,4 @@ class Norm(Persistence):
         if test or not plot:
             self.test_crash(L1_stats, L2_stats, crash_date)
         if plot:
-            self.visualise_crash(L1_stats, L2_stats, crash_date)
+            self.visualise_crash(L1_stats, L2_stats, crash_date, save)

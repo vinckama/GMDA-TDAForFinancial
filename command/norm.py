@@ -48,7 +48,7 @@ Subcommands are:
             description='compute norm')
         # prefixing the argument with -- means it's optional
         parser.add_argument(
-            '--w_size',
+            '-w_size',
             help='size of the windows for the landscapes computations',
             required=True)
 
@@ -65,8 +65,12 @@ Subcommands are:
 
     def visualise(self):
         parser = self.parse()
+        parser.add_argument('--save', 
+                            help='location where you want to save graphs',
+                            default='')
         args = parser.parse_args(sys.argv[3:])
-        self.norm.visualise(int(args.w_size), args.start_date,  args.end_date)
+        self.norm.visualise(int(args.w_size), args.start_date,  args.end_date, 
+                            args.save)
 
     def get(self):
         parser = self.parse()
@@ -78,12 +82,12 @@ Subcommands are:
             description = 'get and plot statistics on crashs')
         # prefixing the argument with -- means it's optional
         parser.add_argument(
-            '--w_size',
+            '-w_size',
             help = 'size of the windows for the landscapes computations',
             required = True)
 
         parser.add_argument(
-            '--year',
+            '-year',
             help='year of the crash',
             choices = ['2000', '2008'],
             required = True)
@@ -94,8 +98,13 @@ Subcommands are:
         parser.add_argument('--plot', help='compute mann kendall test',
                     action='store_true')
         
+        parser.add_argument('--save', 
+                            help='location where you want to save graphs',
+                            default='')
+        
         args = parser.parse_args(sys.argv[3:])
-        self.norm.crash_stats(int(args.w_size), args.year, args.test, args.plot)
+        self.norm.crash_stats(int(args.w_size), args.year, args.test, args.plot,
+                              args.save)
 
     def clean(self):
         self.norm.clean_dataset()

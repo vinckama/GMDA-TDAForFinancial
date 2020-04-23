@@ -26,7 +26,7 @@ class Landscape(Persistence):
         self.ax1 = None
         self.ax2 = None
 
-    def visualise(self, w_size, end_date=None) -> None:
+    def visualise(self, w_size, end_date=None, save='') -> None:
         """"
         plot persistence and its landscape
 
@@ -58,6 +58,8 @@ class Landscape(Persistence):
         sys.stdout.write(f'Plot Persistence graphs\n')
         sys.stdout.flush()
         plt.draw()
+        if save:
+            self.fig.savefig(save)
         plt.pause(0.001)
         input("Press [enter] to continue.")
 

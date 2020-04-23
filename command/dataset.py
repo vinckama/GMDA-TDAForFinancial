@@ -43,11 +43,15 @@ Subcommands are:
         # prefixing the argument with -- means it's optional
         parser.add_argument('--log', help='plot log ratio graphs',
                             action='store_true')
+        parser.add_argument('--save', 
+                            help='location where you want to save graphs',
+                            default='')
 
         args = parser.parse_args(sys.argv[3:])
+        print(args)
         if args.log:
-            self.df_log.visualise_subplots()
+            self.df_log.visualise_subplots(save = args.save)
         else:
-            self.df.visualise()
+            self.df.visualise(save = args.save)
 
 

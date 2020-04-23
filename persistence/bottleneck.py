@@ -73,7 +73,7 @@ class Bottleneck(Persistence):
         self.save_dataset(df, f'w{w_size}_bottleneck')
         return bottleneck
 
-    def visualise(self, w_size, start_date=None, end_date=None):
+    def visualise(self, w_size, start_date=None, end_date=None, save=''):
         """Plot bottleneck distance on a time window
 
         Parameters:
@@ -102,6 +102,8 @@ class Bottleneck(Persistence):
         sys.stdout.write(f'Plot norm of bottleneck distance\n')
         sys.stdout.flush()
         plt.draw()
+        if save:
+            self.fig.savefig(save)
         plt.pause(0.001)
         input("Press [enter] to continue.")
 

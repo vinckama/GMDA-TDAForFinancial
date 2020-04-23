@@ -46,7 +46,7 @@ Subcommands are:
             description='compute bottleneck')
         # prefixing the argument with -- means it's optional
         parser.add_argument(
-            '--w_size',
+            '-w_size',
             help='size of the windows for the landscapes computations',
             required=True)
 
@@ -63,9 +63,12 @@ Subcommands are:
 
     def visualise(self):
         parser = self.parse()
+        parser.add_argument('--save',
+                            help='location where you want to save graphs',
+                            default='')
         args = parser.parse_args(sys.argv[3:])
         self.bottleneck.visualise(int(args.w_size),
-                                  args.start_date,  args.end_date)
+                                  args.start_date,  args.end_date, args.save)
 
     def get(self):
         parser = self.parse()

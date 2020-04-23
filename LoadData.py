@@ -129,7 +129,7 @@ class DateDataFrame(pd.DataFrame, ABC):
     def _constructor(self):
         return DateDataFrame
 
-    def visualise(self, title='Stock market developments'):
+    def visualise(self, title='Stock market developments', save=''):
         """
         visualise without subplot the dataframe
         :param title: title of the graph
@@ -160,12 +160,12 @@ class DateDataFrame(pd.DataFrame, ABC):
         sys.stdout.write(f'Plot {title}\n')
         sys.stdout.flush()
         plt.draw()
+        if save:
+            self.fig.savefig(save)
         plt.pause(0.001)
         input("Press [enter] to continue.")
 
-
-    def visualise_subplots(self,
-            title='Stock market(?? log consecutive developpment ratio ??)'):
+    def visualise_subplots(self, title='Stock market log-ratio', save=''):
         """
         visualise with subplots the dataframe
         :param title: title of the graphs
@@ -198,6 +198,8 @@ class DateDataFrame(pd.DataFrame, ABC):
         sys.stdout.write(f'Plot {title}\n')
         sys.stdout.flush()
         plt.draw()
+        if save:
+            self.fig.savefig(save)
         plt.pause(0.001)
         input("Press [enter] to continue.")
 
