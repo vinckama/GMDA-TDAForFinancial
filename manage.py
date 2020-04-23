@@ -14,7 +14,7 @@ libraries = [
     'numpy',
     'pandas',
     'gudhi',
-    'matplotlib',
+    'matplotlib'
 ]
 
 

@@ -22,7 +22,7 @@ class NormCommand(object):
 Subcommands are:
    visualise     plot the norm graph
    get           get the norm
-   crash_stats   plot statistics on crash
+   crash_stats   get and plot statistics on crashs
    clean         clean the hidden working database
 ''')
         parser.add_argument('command', help='Subcommand to run')
@@ -75,7 +75,7 @@ Subcommands are:
     
     def crash_stats(self):
         parser = argparse.ArgumentParser(
-            description = 'plot statistics on crash')
+            description = 'get and plot statistics on crashs')
         # prefixing the argument with -- means it's optional
         parser.add_argument(
             '--w_size',
@@ -84,12 +84,18 @@ Subcommands are:
 
         parser.add_argument(
             '--year',
-            help='tthe year of the crash',
-            choices = ['2000', '20008'],
+            help='year of the crash',
+            choices = ['2000', '2008'],
             required = True)
         
+        parser.add_argument('--test', help='plot statistics',
+                    action='store_true')
+        
+        parser.add_argument('--plot', help='compute mann kendall test',
+                    action='store_true')
+        
         args = parser.parse_args(sys.argv[3:])
-        self.norm.visualise_crash(int(args.w_size), args.year,  args.end_date)
+        self.norm.crash_stats(int(args.w_size), args.year, args.test, args.plot)
 
     def clean(self):
         self.norm.clean_dataset()

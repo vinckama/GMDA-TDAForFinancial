@@ -13,6 +13,7 @@ import sys
 from .persistence import Persistence
 from utils import ProgressBar
 from scipy import signal
+import pymannkendall as mk
 
 class Norm(Persistence):
     """Class to compute the norm of the persistence
@@ -163,24 +164,13 @@ class Norm(Persistence):
             AC[idx] = acf[1]
         return AC
 
-    def visualise_crash(self, w_size, crash_year='2000'):
-        L1, L2 = self.get_norms(w_size)
-        V1 = self.variance(L1)
-        SD1 = self.v_spectral_density(L1)
-        AC1 = self.acf_firstlag(L1)
-
-        V2 = self.variance(L2)
-        SD2 = self.av_spectral_density(L2)
-        AC2 = self.acf_firstlag(L2)
-
-        crash_dict = {
-            '2000':'2000-03-10',
-            '2008':'2008-09-15'
-        }
-        idx_crash = self.df.index.get_loc(crash_dict[crash_year])
+    def visualise_crash(self, L1_stats, L2_stats, crash_date):
+        (V1, SD1, AC1) = L1_stats
+        (V2, SD2, AC2) = L2_stats
+        idx_crash = self.df.index.get_loc(crash_date)
         x_date = pd.to_datetime(self.df.index[idx_crash - 250: idx_crash])
 
-        fig = plt.figure(figsize=(18,10))
+        fig = plt.figure(figsize=(12, 6))
         locator = mdates.AutoDateLocator(minticks=3, maxticks=7)
         formatter = mdates.ConciseDateFormatter(locator)
 
@@ -227,3 +217,53 @@ class Norm(Persistence):
         plt.draw()
         plt.pause(0.001)
         input("Press [enter] to continue.")
+
+    def test_crash(self, L1_stats, L2_stats, crash_date):
+        (V1, SD1, AC1) = L1_stats
+        (V2, SD2, AC2) = L2_stats
+
+        sys.stdout.write(f"Results of the Mann Kendall Test "
+                         f"for the L1-norm (crash: {crash_date}): \n")
+        MKV1 = mk.original_test(V1)
+        sys.stdout.write(
+            f"Variance:          trend = {MKV1.trend} |  tau = {MKV1.Tau:0.4f}\n")
+        MKSD1 = mk.original_test(SD1)
+        sys.stdout.write(
+            f"Spectral Density:  trend = {MKSD1.trend} | tau = {MKSD1.Tau:0.4f}\n")
+        MKAC1 = mk.original_test(AC1)
+        sys.stdout.write(
+            f"Autocorrelation:   trend = {MKAC1.trend} | tau = {MKAC1.Tau:0.4f}\n\n")
+
+        sys.stdout.write(f"Results of the Mann Kendall Test "
+                         f"for the L2-norm (crash: {crash_date}): \n")
+        MKV2 = mk.original_test(V2)
+        sys.stdout.write(
+            f"Variance:           trend = {MKV2.trend} | tau = {MKV2.Tau:0.4f}\n")
+        MKSD2 = mk.original_test(SD2)
+        sys.stdout.write(
+            f"Spectral Density:   trend = {MKSD2.trend} | tau = {MKSD2.Tau:0.4f}\n")
+        MKAC2 = mk.original_test(AC2)
+        sys.stdout.write(
+            f"Autocorrelation:    trend = {MKAC2.trend} | tau = {MKAC2.Tau:0.4f}\n\n")
+
+    def compute_stats(self, norm):
+        V = self.variance(norm)
+        SD = self.av_spectral_density(norm)
+        AC = self.acf_firstlag(norm)
+        return V, SD, AC
+
+    def crash_stats(self, w_size, crash_year='2000', test=False, plot=False):
+        L1, L2 = self.get_norms(w_size)
+        L1_stats = self.compute_stats(L1)
+        L2_stats = self.compute_stats(L2)
+
+        crash_dict = {
+            '2000': '2000-03-10',
+            '2008': '2008-09-15'
+        }
+        crash_date = crash_dict[crash_year]
+
+        if test or not plot:
+            self.test_crash(L1_stats, L2_stats, crash_date)
+        if plot:
+            self.visualise_crash( L1_stats, L2_stats, crash_date)
