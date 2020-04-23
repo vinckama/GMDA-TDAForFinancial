@@ -14,6 +14,8 @@ import gudhi as gd
 import re
 import sys
 from utils import ProgressBar
+from os import path, mkdir, listdir
+from shutil import rmtree
 
 
 class Persistence:
@@ -22,8 +24,14 @@ class Persistence:
     Attributes:
         dataframe: dataframe on which the persistence will be calculated
     """
-    def __init__(self, dataframe):
+
+    DATA_PATH = 'GMDA_data/...'
+
+    def __init__(self, dataframe, DATA_PATH='GMDA_data/.None'):
         self.df = dataframe
+        self.DATA_PATH = DATA_PATH
+        if not path.exists(self.DATA_PATH):
+            mkdir(self.DATA_PATH)
 
     @staticmethod
     def piecewise(x, birth, death):
@@ -102,6 +110,21 @@ class Persistence:
         if idx - w_size + 1 <= 0:
             raise IndexError(f"w_size > idx ({w_size} > {idx})")
 
+    def load_dataset(self, file_name):
+        file_full_name = f'.{file_name}.csv'
+        if file_full_name in listdir(self.DATA_PATH):
+            df = pd.read_csv(path.join(self.DATA_PATH, file_full_name))
+            return df
+        return None
+
+    def save_dataset(self, df, file_name):
+        df.to_csv(path.join(self.DATA_PATH, f'.{file_name}.csv'))
+
+    def clean_dataset(self):
+        if path.exists(self.DATA_PATH):
+            rmtree(self.DATA_PATH)
+            mkdir(self.DATA_PATH)
+
 
 class Landscape(Persistence):
     """
@@ -111,7 +134,7 @@ class Landscape(Persistence):
     sns.set_palette("husl")
 
     def __init__(self, dataframe):
-        super().__init__(dataframe)
+        super().__init__(dataframe, DATA_PATH = 'GMDA_data/.landscapes')
         self.fig = None
         self.ax1 = None
         self.ax2 = None
@@ -228,12 +251,9 @@ class Norm(Persistence):
     sns.set_palette("husl")
 
     def __init__(self, dataframe):
-        super().__init__(dataframe)
+        super().__init__(dataframe, DATA_PATH = 'GMDA_data/.norm')
         self.fig = None
-        self. ax1 = None
-        self.last_w_size = None
-        self.last_L1 = None
-        self.last_L2 = None
+        self.ax1 = None
 
     def get_norms(self, w_size) -> tuple:
         """Compute the series of L1 and L2 norms of persistence landscapes
@@ -245,9 +265,11 @@ class Norm(Persistence):
             L1: Norm 1
             L2: Norm 2
         """
-
-        if w_size == self.last_w_size:
-            return self.last_L1, self.last_L2
+        last_df = self.load_dataset(f'w{w_size}_norm')
+        if last_df is not None:
+            L1 = last_df['L1'].values.reshape(-1)
+            L2 = last_df['L2'].values.reshape(-1)
+            return L1, L2
 
         length = self.df.shape[0] - w_size
         L1, L2 = np.zeros(self.df.shape[0]), np.zeros(self.df.shape[0])
@@ -270,9 +292,8 @@ class Norm(Persistence):
             L2[idx + w_size] = norm2
             next(pb)
 
-        self.last_w_size = w_size
-        self.last_L1 = L1
-        self.last_L2 = L2
+        df = pd.DataFrame({'L1': L1, 'L2': L2}, columns = ['L1', 'L2'])
+        self.save_dataset(df, f'w{w_size}_norm')
         return L1, L2
 
     @staticmethod
@@ -303,12 +324,11 @@ class Norm(Persistence):
             self.ax1.lines = []
 
         L1_r, L2_r = self.__call__(w_size, start_date, end_date)
-        L1_r_normalized = self.normalize(L1_r)
-        L2_r_normalized = self.normalize(L2_r)
-        dates = pd.to_datetime(self.df.loc[start_date: end_date].index[:-1])
-        self.ax1.plot(dates, L1_r_normalized, label = 'L1')
-        self.ax1.plot(dates, L2_r_normalized, label = 'L2')
-        self.ax1.set_xlim([dates[0], dates[-1]])
+        L1_r['L1'] = self.normalize(L1_r['L1'])
+        L2_r['L2'] = self.normalize(L2_r['L2'])
+        self.ax1.plot(L1_r.index, L1_r, label = 'L1')
+        self.ax1.plot(L2_r.index, L2_r, label = 'L2')
+        self.ax1.set_xlim([L2_r.index[0], L2_r.index[-1]])
         self.ax1.legend()
         sys.stdout.write(f'Plot norm of persistence landscape\n')
         sys.stdout.flush()
@@ -337,8 +357,11 @@ class Norm(Persistence):
         self.verify_w_size(idx_start, w_size)
 
         L1, L2 = self.get_norms(w_size)
+        dates = pd.to_datetime(self.df.index[idx_start:idx_end])
         L1_r = L1[idx_start:idx_end]
+        L1_r = pd.DataFrame(L1_r, index = dates, columns = ['L1'])
         L2_r = L2[idx_start:idx_end]
+        L2_r = pd.DataFrame(L2_r, index = dates, columns = ['L2'])
         return L1_r, L2_r
 
 
@@ -350,11 +373,9 @@ class Bottleneck(Persistence):
     sns.set_palette("husl")
 
     def __init__(self, dataframe):
-        super().__init__(dataframe)
+        super().__init__(dataframe, DATA_PATH = 'GMDA_data/.bottleneck')
         self.fig = None
         self. ax1 = None
-        self.last_w_size = None
-        self.last_bottleneck = None
 
     def get_bottleneck_distance(self, w_size):
         """Compute bottleneck distance of persistence landscape
@@ -365,8 +386,10 @@ class Bottleneck(Persistence):
         Returns:
             bottleneck: bottleneck distance
         """
-        if w_size == self.last_w_size:
-            return self.last_bottleneck
+        last_df = self.load_dataset(f'w{w_size}_bottleneck')
+        if last_df is not None:
+            bottleneck = last_df['bottleneck'].values.reshape(-1)
+            return bottleneck
 
         length = self.df.shape[0] - w_size
         bottleneck = np.zeros(self.df.shape[0])
@@ -396,8 +419,8 @@ class Bottleneck(Persistence):
             prev_diagram_b = current_diagram_b
             next(pb)
 
-        self.last_w_size = w_size
-        self.last_bottleneck = bottleneck
+        df = pd.DataFrame({'bottleneck': bottleneck}, columns = ['bottleneck'])
+        self.save_dataset(df, f'w{w_size}_bottleneck')
         return bottleneck
 
     def visualise(self, w_size, start_date=None, end_date=None):
@@ -424,16 +447,15 @@ class Bottleneck(Persistence):
             self.ax1.lines = []
 
         bottleneck_r = self.__call__(w_size, start_date, end_date)
-        dates = pd.to_datetime(self.df.loc[start_date: end_date].index[:-1])
-        self.ax1.plot(dates, bottleneck_r)
-        self.ax1.set_xlim([dates[0], dates[-1]])
+        self.ax1.plot(bottleneck_r.index, bottleneck_r)
+        self.ax1.set_xlim([bottleneck_r.index[0], bottleneck_r.index[-1]])
         sys.stdout.write(f'Plot norm of bottleneck distance\n')
         sys.stdout.flush()
         plt.draw()
         plt.pause(0.001)
         input("Press [enter] to continue.")
 
-    def __call__(self, w_size, start_date=None, end_date=None) -> tuple:
+    def __call__(self, w_size, start_date=None, end_date=None) -> pd.DataFrame:
         """Compute bottleneck distance on a time window
 
         Parameters:
@@ -455,4 +477,7 @@ class Bottleneck(Persistence):
 
         bottleneck = self.get_bottleneck_distance(w_size)
         bottleneck_r = bottleneck[idx_start:idx_end]
+        dates = pd.to_datetime(self.df.index[idx_start:idx_end])
+        bottleneck_r = pd.DataFrame(bottleneck_r, index = dates,
+                                    columns = ['bottleneck'])
         return bottleneck_r

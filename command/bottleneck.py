@@ -21,6 +21,7 @@ class BottleneckCommand(object):
 Subcommands are:
    visualise  plot the bottleneck graph
    get        get the bottleneck distance
+   clean      clean the hidden working database
 ''')
         parser.add_argument('command', help='Subcommand to run')
 
@@ -42,7 +43,7 @@ Subcommands are:
     @staticmethod
     def parse():
         parser = argparse.ArgumentParser(
-            description='visualise the dataset')
+            description='compute bottleneck')
         # prefixing the argument with -- means it's optional
         parser.add_argument(
             '--w_size',
@@ -70,3 +71,6 @@ Subcommands are:
         parser = self.parse()
         args = parser.parse_args(sys.argv[3:])
         self.bottleneck(int(args.w_size), args.start_date,  args.end_date)
+
+    def clean(self):
+        self.bottleneck.clean_dataset()

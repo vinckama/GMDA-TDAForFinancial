@@ -23,6 +23,7 @@ class LandscapeCommand(object):
 Subcommands are:
    visualise  plot the landscape graphs
    get        get the persistence tree and the landscape
+   clean      clean the hidden working database
 ''')
         parser.add_argument('command', help='Subcommand to run')
 
@@ -44,7 +45,7 @@ Subcommands are:
     @staticmethod
     def parse():
         parser = argparse.ArgumentParser(
-            description='visualise the dataset')
+            description='compute landscape persistence')
         # prefixing the argument with -- means it's optional
         parser.add_argument(
             '--w_size',
@@ -66,3 +67,7 @@ Subcommands are:
         parser = self.parse()
         args = parser.parse_args(sys.argv[3:])
         self.landscape(int(args.w_size), args.end_date)
+
+    def clean(self):
+        self.landscape.clean_dataset()
+

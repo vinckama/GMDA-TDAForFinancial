@@ -7,7 +7,7 @@
 import argparse
 import sys
 from utils import verify_lib
-from LoadData import create_dataset, log_df
+from LoadData import DataLoader
 import command
 
 libraries = [
@@ -23,8 +23,8 @@ class Manager(object):
 
         for library in libraries:
             verify_lib(library)
-        self.df = create_dataset()
-        self.df_log = log_df(self.df)
+
+        self.df, self.df_log = (DataLoader())()
 
         parser = argparse.ArgumentParser(
             description='Manager of the project',

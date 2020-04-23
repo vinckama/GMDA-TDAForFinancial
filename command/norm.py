@@ -8,6 +8,7 @@ import argparse
 import sys
 from persistence import Norm
 
+
 class NormCommand(object):
     def __init__(self, df, df_log):
         self.df = df
@@ -21,6 +22,7 @@ class NormCommand(object):
 Subcommands are:
    visualise  plot the norm graph
    get        get the norm
+   clean      clean the hidden working database
 ''')
         parser.add_argument('command', help='Subcommand to run')
 
@@ -42,7 +44,7 @@ Subcommands are:
     @staticmethod
     def parse():
         parser = argparse.ArgumentParser(
-            description='visualise the dataset')
+            description='compute norm')
         # prefixing the argument with -- means it's optional
         parser.add_argument(
             '--w_size',
@@ -69,3 +71,6 @@ Subcommands are:
         parser = self.parse()
         args = parser.parse_args(sys.argv[3:])
         self.norm(int(args.w_size), args.start_date,  args.end_date)
+
+    def clean(self):
+        self.norm.clean_dataset()
