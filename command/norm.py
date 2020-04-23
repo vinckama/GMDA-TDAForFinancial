@@ -20,9 +20,10 @@ class NormCommand(object):
             usage=''''manage.py norm <subcommand>'
 
 Subcommands are:
-   visualise  plot the norm graph
-   get        get the norm
-   clean      clean the hidden working database
+   visualise     plot the norm graph
+   get           get the norm
+   crash_stats   plot statistics on crash
+   clean         clean the hidden working database
 ''')
         parser.add_argument('command', help='Subcommand to run')
 
@@ -71,6 +72,24 @@ Subcommands are:
         parser = self.parse()
         args = parser.parse_args(sys.argv[3:])
         self.norm(int(args.w_size), args.start_date,  args.end_date)
+    
+    def crash_stats(self):
+        parser = argparse.ArgumentParser(
+            description = 'plot statistics on crash')
+        # prefixing the argument with -- means it's optional
+        parser.add_argument(
+            '--w_size',
+            help = 'size of the windows for the landscapes computations',
+            required = True)
+
+        parser.add_argument(
+            '--year',
+            help='tthe year of the crash',
+            choices = ['2000', '20008'],
+            required = True)
+        
+        args = parser.parse_args(sys.argv[3:])
+        self.norm.visualise_crash(int(args.w_size), args.year,  args.end_date)
 
     def clean(self):
         self.norm.clean_dataset()

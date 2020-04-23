@@ -12,7 +12,7 @@ import gudhi as gd
 import sys
 from .persistence import Persistence
 from utils import ProgressBar
-
+from scipy import signal
 
 class Norm(Persistence):
     """Class to compute the norm of the persistence
@@ -98,7 +98,8 @@ class Norm(Persistence):
         L1_r['L1'] = self.normalize(L1_r['L1'])
         L2_r['L2'] = self.normalize(L2_r['L2'])
         self.ax1.plot(L1_r.index, L1_r, label = 'L1')
-        self.ax1.plot(L2_r.index, L2_r, label = 'L2')
+        self.ax1.plot(L2_r.index, L2_r, label = 'L2',
+                      color = sns.husl_palette()[2])
         self.ax1.set_xlim([L2_r.index[0], L2_r.index[-1]])
         self.ax1.legend()
         sys.stdout.write(f'Plot norm of persistence landscape\n')
@@ -134,3 +135,95 @@ class Norm(Persistence):
         L2_r = L2[idx_start:idx_end]
         L2_r = pd.DataFrame(L2_r, index = dates, columns = ['L2'])
         return L1_r, L2_r
+
+    def variance(self, norm):
+        V = np.zeros(self.df.shape[0])
+        for idx in range(500, self.df.shape[0]):
+            L_window = norm[idx-500: idx]
+            var = np.var(L_window)
+            V[idx] = var
+        return V
+
+    def av_spectral_density(self, norm):
+        SD = np.zeros(self.df.shape[0])
+        for idx in range(500, self.df.shape[0]):
+            L_window = norm[idx-500: idx]
+            f, Pxx_den = signal.periodogram(L_window)
+            f, Pxx_den = np.delete(f, 0), np.delete(Pxx_den, 0)
+            f, Pxx_den = f[0:len(f) // 8], Pxx_den[0:len(f) // 8]
+            SD[idx] = np.mean(Pxx_den)
+        return SD
+
+    def acf_firstlag(self, norm):
+        AC = np.zeros(self.df.shape[0])
+        for idx in range(500, self.df.shape[0]):
+            L_window = norm[idx-500:idx]
+            acf = np.correlate(L_window, L_window, mode='full')
+            acf = acf[acf.size // 2:]
+            AC[idx] = acf[1]
+        return AC
+
+    def visualise_crash(self, w_size, crash_year='2000'):
+        L1, L2 = self.get_norms(w_size)
+        V1 = self.variance(L1)
+        SD1 = self.v_spectral_density(L1)
+        AC1 = self.acf_firstlag(L1)
+
+        V2 = self.variance(L2)
+        SD2 = self.av_spectral_density(L2)
+        AC2 = self.acf_firstlag(L2)
+
+        crash_dict = {
+            '2000':'2000-03-10',
+            '2008':'2008-09-15'
+        }
+        idx_crash = self.df.index.get_loc(crash_dict[crash_year])
+        x_date = pd.to_datetime(self.df.index[idx_crash - 250: idx_crash])
+
+        fig = plt.figure(figsize=(18,10))
+        locator = mdates.AutoDateLocator(minticks=3, maxticks=7)
+        formatter = mdates.ConciseDateFormatter(locator)
+
+        ax = fig.add_subplot(2, 3, 1)
+        ax.plot(x_date, V1[idx_crash - 250: idx_crash])
+        ax.set_title('Variance L1')
+        ax.xaxis.set_major_locator(locator)
+        ax.xaxis.set_major_formatter(formatter)
+
+        ax = fig.add_subplot(2, 3, 2)
+        ax.plot(x_date, SD1[idx_crash - 250: idx_crash])
+        ax.set_title('Spectrum L1')
+        ax.xaxis.set_major_locator(locator)
+        ax.xaxis.set_major_formatter(formatter)
+
+        ax = fig.add_subplot(2, 3, 3)
+        ax.plot(x_date, AC1[idx_crash - 250: idx_crash])
+        ax.set_title('ACF(1) L1')
+        ax.xaxis.set_major_locator(locator)
+        ax.xaxis.set_major_formatter(formatter)
+
+        color = sns.husl_palette()[2]
+
+        ax = fig.add_subplot(2, 3, 4)
+        ax.plot(x_date, V2[idx_crash - 250: idx_crash], color = color)
+        ax.set_title('Variance L2')
+        ax.xaxis.set_major_locator(locator)
+        ax.xaxis.set_major_formatter(formatter)
+
+        ax = fig.add_subplot(2, 3, 5)
+        ax.plot(x_date, SD2[idx_crash - 250: idx_crash], color = color)
+        ax.set_title('Spectrum L2')
+        ax.xaxis.set_major_locator(locator)
+        ax.xaxis.set_major_formatter(formatter)
+
+        ax = fig.add_subplot(2, 3, 6)
+        ax.plot(x_date, AC2[idx_crash - 250: idx_crash], color = color)
+        ax.set_title('ACF(1) L2')
+        ax.xaxis.set_major_locator(locator)
+        ax.xaxis.set_major_formatter(formatter)
+
+        sys.stdout.write(f'Plot norm of persistence landscape\n')
+        sys.stdout.flush()
+        plt.draw()
+        plt.pause(0.001)
+        input("Press [enter] to continue.")
