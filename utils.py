@@ -3,7 +3,7 @@
 """
 @author: Vincent Roy & Arthur Claude
 """
-from math import log
+
 import sys
 import pkg_resources
 
@@ -14,7 +14,6 @@ def verify_lib(library):
         raise ModuleNotFoundError(
             f"Please install '{library}' library "
             f"using 'conda {library} install'")
-
 
 
 class ProgressBar:
@@ -70,12 +69,3 @@ class ProgressBar:
     def __next__(self):
         self.update_progress(iteration = self.iteration + 1)
 
-def main():
-    import time
-    a = ProgressBar(total = 1000)
-    for k in range(0, 1001):
-        time.sleep(0.005)
-        a.update_progress(k)
-
-if __name__ =="__main__":
-    main()
