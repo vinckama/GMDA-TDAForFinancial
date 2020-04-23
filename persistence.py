@@ -116,7 +116,7 @@ class Landscape(Persistence):
         self.ax1 = None
         self.ax2 = None
 
-    def visualise(self, end_date, w_size) -> None:
+    def visualise(self, w_size, end_date=None) -> None:
         """"
         plot persistence and its landscape
 
@@ -142,12 +142,14 @@ class Landscape(Persistence):
             self.ax1.cla()
             self.ax2.lines = []
 
-        diagram, land = self.__call__(end_date, w_size)
+        diagram, land = self.__call__(w_size, end_date)
         gd.plot_persistence_diagram(diagram, axes = self.ax1)
         self.ax2.plot(land[0])
-        plt.show()
         sys.stdout.write(f'Plot Persistence graphs\n')
         sys.stdout.flush()
+        plt.draw()
+        plt.pause(0.001)
+        input("Press [enter] to continue.")
 
     @staticmethod
     def __min_birth_max_death(persistence, band=0.0):
@@ -179,7 +181,7 @@ class Landscape(Persistence):
         """Replace infinity values with max_death + delta for diagram to be more
 
         :param persistence: The persistence to plot.
-        :param inf_delta: the delta of the infiny.
+        :param inf_delta: the delta of the infinity.
         :param band: band
         :returns: float -- x_max
         """
@@ -189,7 +191,7 @@ class Landscape(Persistence):
         x_max = max_death + delta
         return x_max
 
-    def __call__(self, end_date, w_size) -> tuple:
+    def __call__(self, w_size, end_date=None) -> tuple:
         """
         compute persistence and its landscape
 
@@ -200,8 +202,11 @@ class Landscape(Persistence):
         Returns:
             (persistence, landscape)
         """
-        self.verify_date(end_date)
-        idx = self.df.index.get_loc(end_date)
+        if end_date is not None:
+            self.verify_date(end_date)
+            idx = self.df.index.get_loc(end_date)
+        else:
+            idx = self.df.index.shape[0]
         self.verify_w_size(idx, w_size)
 
         array_window = self.df.iloc[idx - w_size + 1: idx + 1, :].values
@@ -274,7 +279,7 @@ class Norm(Persistence):
     def normalize(array) -> np.array:
         return (array-np.min(array)) / (np.max(array)-np.min(array))
 
-    def visualise(self, start_date, end_date, w_size):
+    def visualise(self, w_size, start_date=None, end_date=None):
         """Plot L1 and L2 norms series on a time window
 
         Parameters:
@@ -297,7 +302,7 @@ class Norm(Persistence):
         else:
             self.ax1.lines = []
 
-        L1_r, L2_r = self.__call__(start_date, end_date, w_size)
+        L1_r, L2_r = self.__call__(w_size, start_date, end_date)
         L1_r_normalized = self.normalize(L1_r)
         L2_r_normalized = self.normalize(L2_r)
         dates = pd.to_datetime(self.df.loc[start_date: end_date].index[:-1])
@@ -305,11 +310,13 @@ class Norm(Persistence):
         self.ax1.plot(dates, L2_r_normalized, label = 'L2')
         self.ax1.set_xlim([dates[0], dates[-1]])
         self.ax1.legend()
-        plt.show()
         sys.stdout.write(f'Plot norm of persistence landscape\n')
         sys.stdout.flush()
+        plt.draw()
+        plt.pause(0.001)
+        input("Press [enter] to continue.")
 
-    def __call__(self, start_date, end_date, w_size) -> tuple:
+    def __call__(self, w_size, start_date=None, end_date=None) -> tuple:
         """Compute L1 and L2 norms series on a time window
 
         Parameters:
@@ -317,11 +324,16 @@ class Norm(Persistence):
             end_date: end date of the period studied
             w_size: size of the windows for the landscapes computation
         """
-        self.verify_date(start_date)
-        self.verify_date(end_date)
-
-        idx_start = self.df.index.get_loc(start_date)
-        idx_end = self.df.index.get_loc(end_date)
+        if start_date is not None:
+            self.verify_date(start_date)
+            idx_start = self.df.index.get_loc(start_date)
+        else:
+            idx_start = w_size
+        if end_date is not None:
+            self.verify_date(end_date)
+            idx_end = self.df.index.get_loc(end_date)
+        else:
+            idx_end = self.df.index.shape[0]
         self.verify_w_size(idx_start, w_size)
 
         L1, L2 = self.get_norms(w_size)
@@ -388,7 +400,7 @@ class Bottleneck(Persistence):
         self.last_bottleneck = bottleneck
         return bottleneck
 
-    def visualise(self, start_date, end_date, w_size):
+    def visualise(self, w_size, start_date=None, end_date=None):
         """Plot bottleneck distance on a time window
 
         Parameters:
@@ -411,15 +423,17 @@ class Bottleneck(Persistence):
         else:
             self.ax1.lines = []
 
-        bottleneck_r = self.__call__(start_date, end_date, w_size)
+        bottleneck_r = self.__call__(w_size, start_date, end_date)
         dates = pd.to_datetime(self.df.loc[start_date: end_date].index[:-1])
         self.ax1.plot(dates, bottleneck_r)
         self.ax1.set_xlim([dates[0], dates[-1]])
-        plt.show()
         sys.stdout.write(f'Plot norm of bottleneck distance\n')
         sys.stdout.flush()
+        plt.draw()
+        plt.pause(0.001)
+        input("Press [enter] to continue.")
 
-    def __call__(self, start_date, end_date, w_size) -> tuple:
+    def __call__(self, w_size, start_date=None, end_date=None) -> tuple:
         """Compute bottleneck distance on a time window
 
         Parameters:
@@ -427,11 +441,16 @@ class Bottleneck(Persistence):
             end_date: end date of the period studied
             w_size: size of the windows for the landscapes computation
         """
-        self.verify_date(start_date)
-        self.verify_date(end_date)
-
-        idx_start = self.df.index.get_loc(start_date)
-        idx_end = self.df.index.get_loc(end_date)
+        if start_date is not None:
+            self.verify_date(start_date)
+            idx_start = self.df.index.get_loc(start_date)
+        else:
+            idx_start = w_size
+        if end_date is not None:
+            self.verify_date(end_date)
+            idx_end = self.df.index.get_loc(end_date)
+        else:
+            idx_end = self.df.index.shape[0]
         self.verify_w_size(idx_start, w_size)
 
         bottleneck = self.get_bottleneck_distance(w_size)
