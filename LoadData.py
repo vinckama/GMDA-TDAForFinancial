@@ -3,44 +3,88 @@
 """
 @author: Vincent Roy & Arthur Claude
 """
-from abc import ABC
-
 import numpy as np
+from abc import ABC
 import pandas as pd
-from os import path
+from os import path, mkdir, listdir
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import seaborn as sns
 import sys
-data_path = 'data'
+from math import log
+
+
+DATA_PATH = 'GMDA_data'
+dataset_list = [
+    'DowJones',
+    'Nasdaq',
+    'Russell2000',
+    'SP500'
+]
+
+
+def verify_data_path():
+    if not path.exists(DATA_PATH):
+        mkdir(DATA_PATH)
+        sys.stdout.write(f"Creating the folder '{DATA_PATH}' to hold the data.")
+        sys.stdout.flush()
+    data_path_files= listdir(DATA_PATH)
+    for dataset in dataset_list:
+        if f'{dataset}.csv' not in data_path_files:
+            raise FileNotFoundError(f"Please add '{dataset}.csv' "
+                                    f"in the '{DATA_PATH}' folder")
 
 
 def create_dataset():
-        DowJones_pd = pd.read_csv(path.join(data_path, "DowJones.csv"),
+    verify_data_path()
+    saved_df = load_dataset("data_df")
+    if saved_df is not None:
+        return saved_df
+    sys.stdout.write("Create the dataset\n")
+    sys.stdout.flush()
+
+    df_dict = dict()
+    for dataset in dataset_list:
+        df = pd.read_csv(path.join(DATA_PATH, f"{dataset}.csv"),
                                   header=0, delimiter=",")
-        Nasdaq_pd = pd.read_csv(
-            path.join(data_path, "Nasdaq.csv"),
-                                  header=0, delimiter=",")
-        Russell2000_pd = pd.read_csv(
-            path.join(data_path, "Russell2000.csv"),
-            header=0, delimiter=",")
-        SP500_pd = pd.read_csv(
-            path.join(data_path, "SP500.csv"),
-            header=0, delimiter=",")
+        df_dict[dataset] = df['Adj Close']
+        index = df['Date']
 
-        df_dict = {
-            "DowJones": DowJones_pd['Adj Close'],
-            "Nasdaq": Nasdaq_pd['Adj Close'],
-            "Russell2000": Russell2000_pd['Adj Close'],
-            "SP500": SP500_pd['Adj Close']
-        }
+    for (name, df) in df_dict.items():
+        df_dict[name] = np.asarray(df)
 
-        for (name, df) in df_dict.items():
-            df_dict[name] = np.asarray(df)
+    data_df = DateDataFrame(df_dict, index = index)
+    data_df.sort_index(inplace = True)
+    save_dataset(data_df, 'data_df')
+    return data_df
 
-        data_df = DateDataFrame(df_dict, index = DowJones_pd.Date)
-        data_df.sort_index(inplace = True)
-        return data_df
+
+def load_dataset(file_name):
+    file_full_name= f'.{file_name}.csv'
+    if file_full_name in listdir(DATA_PATH):
+        df = DateDataFrame(pd.read_csv(path.join(DATA_PATH, file_full_name)))
+        df.set_index('Date', inplace = True)
+        return df
+    return None
+
+
+def save_dataset(df, file_name):
+    df.to_csv(path.join(DATA_PATH, f'.{file_name}.csv'))
+
+
+def log_df(df):
+    saved_df = load_dataset("ratio_df")
+    if saved_df is not None:
+        return saved_df
+    sys.stdout.write("Create the ratio-dataset\n")
+    sys.stdout.flush()
+
+    shifted_df = df.shift(-1)
+    ratio_df = df / shifted_df
+    ratio_df.dropna(inplace = True)
+    ratio_df =ratio_df.applymap(lambda x: log(x))
+    save_dataset(ratio_df, 'ratio_df')
+    return ratio_df
 
 
 class DateDataFrame(pd.DataFrame, ABC):
@@ -87,9 +131,12 @@ class DateDataFrame(pd.DataFrame, ABC):
             ax1.plot(dates, self.loc[:, column], label = column)
         ax1.set_xlim([dates[0], dates[-1]])
         ax1.legend()
-        plt.show()
         sys.stdout.write(f'Plot {title}\n')
         sys.stdout.flush()
+        plt.draw()
+        plt.pause(0.001)
+        input("Press [enter] to continue.")
+
 
     def visualise_subplots(self,
             title='Stock market(?? log consecutive developpment ratio ??)'):
@@ -122,8 +169,12 @@ class DateDataFrame(pd.DataFrame, ABC):
             ax.plot(dates, self.loc[:, column], color=sns.husl_palette()[idx])
             ax.set_xlim([dates[0], dates[-1]])
             ax.set_ylim([self.values.min(), self.values.max()])
-            plt.show()
         sys.stdout.write(f'Plot {title}\n')
         sys.stdout.flush()
+        plt.draw()
+        plt.pause(0.001)
+        input("Press [enter] to continue.")
+
+
 
 
