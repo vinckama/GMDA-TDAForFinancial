@@ -163,7 +163,7 @@ class Bottleneck(Persistence):
         sys.stdout.flush()
         plt.draw()
         if save:
-            self.fig.savefig(save)
+            fig.savefig(save)
         plt.pause(0.001)
         input("Press [enter] to continue.")
 
