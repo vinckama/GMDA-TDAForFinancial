@@ -159,7 +159,7 @@ class Bottleneck(Persistence):
         ax.xaxis.set_major_locator(locator)
         ax.xaxis.set_major_formatter(formatter)
 
-        sys.stdout.write(f'Plot stats of the crash ({crash_date})\n')
+        sys.stdout.write(f'Plot stats on the crash ({crash_date})\n')
         sys.stdout.flush()
         plt.draw()
         if save:
