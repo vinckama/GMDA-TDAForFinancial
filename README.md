@@ -26,10 +26,6 @@ We also advise you to create a new environment:
 conda create --name='GMDA-env' -y
 conda activate GMDA-env
 ```
-You can locate the environment using the command
-```bash
-conda env list 
-```
 
 ## Command Line Interface
 
@@ -114,5 +110,3 @@ financial time series : Landscapes of crashes.PhysicaA
 [2]: https://gudhi.inria.fr \
 [3]: https://matplotlib.org
 
-
-TODO ajouter Gudhi
