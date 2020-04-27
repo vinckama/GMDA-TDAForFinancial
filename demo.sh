@@ -1,8 +1,8 @@
 #!/bin/bash
-#pyconda='/Users/vincentroy/anaconda3/envs/GMDA-TDAForFinancial/bin/python'
+set -e
 echo What is the location of your conda environnement?
 read pyconda
-
+pyconda+='/bin/python'
 # dataset
 (sleep 20s; echo '\r') | $pyconda manage.py dataset visualise
 echo ''

@@ -10,25 +10,17 @@ from utils import verify_lib
 from LoadData import DataLoader
 import command
 
-libraries = [
-    'numpy',
-    'pandas',
-    'gudhi',
-    'matplotlib'
-]
+
 
 
 class Manager(object):
     def __init__(self):
 
-        for library in libraries:
-            verify_lib(library)
-
         self.df, self.df_log = (DataLoader())()
 
         parser = argparse.ArgumentParser(
             description='Manager of the project',
-            usage=''''manage.py <command>'
+            usage='''manage.py <command>'
 
 The most commonly used commands are:
    dataset      Access to the dataset
