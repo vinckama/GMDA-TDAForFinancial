@@ -6,7 +6,7 @@ major US stock markets indices(DowJones, Nasdaq, Russell2000, SP500) over the
 period 1987 2016 using persistent homology following the approach proposed by 
 M. Gidea and Y. Katz in [1].
 
-This project is part of the Foundations of Geometric Methods in Data Analysis course at CentraleSupélec. It is a fairly free project in the form that we have a few questions to guide us around a research paper[1]. This course is given by Frederic Cazals and Frederic Chazal, research director, Inria.
+This project is part of the Foundations of Geometric Methods in Data Analysis course at CentraleSupélec. It is a fairly free project in the form that we have a few questions to guide us around a research paper [1]. This course is given by Frederic Cazals and Frederic Chazal, research director, Inria.
 
 
 we have developed a Command line 
