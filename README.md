@@ -57,20 +57,54 @@ pyconda manage.py <\command>
 ```
 At the first launch, the program will download the datasets from the internet. 
 
-#### dataset
+`This documentation is not meant to be exhaustive, however, 
+it gives a good idea of the contents of the package. You 
+find details on the command arguments using the '-h' argument that you can associate with any
+ what an command.`
+#### Dataset
+Access to the dataset
 ```bash
 pyconda manage.py dataset <\subcommand>
 ```
-| subcommand     | explaination            | options   |
+| subcommand     | explaination            | arguments   |
 | :----------:   | :----------:             | :----------: |
 |  visualise     | visualise the dataset   | --log <br/> --save    |
 
-#### landscape
+#### Landscape
+Access to the landscape persistence
+```bash
+pyconda manage.py landscape <\subcommand>
+```
+| subcommand     | explaination            | arguments   |
+| :----------:   | :----------:             | :----------: |
+|  visualise     | plot the landscape graphs  | -w_size <br/> --end_date <br/> --save    |
+|  get     | get the persistence tree and the landscape   | -w_size <br/> --end_date    |
+|  clean     | clean the hidden working database   |  |
 
-#### norm
+#### Norm
+Access to the norm L1 & L2 of the persistence
+```bash
+pyconda manage.py norm <\subcommand>
+```
+| subcommand     | explaination            | arguments   |
+| :----------:   | :----------:             | :----------: |
+|  visualise     | plot the norm graph  | -w_size <br/> --start_date <br/> --end_date <br/> --save    |
+|  get     | get the norm   | -w_size <br/> --start_date <br/> --end_date  |
+|  crash_stats     |  get and plot statistics on crashs   | -w_size <br/> -year <br/> --test <br/> --plot </br> save  |
+|  clean     | clean the hidden working database   |  |
 
-#### bottleneck
 
+#### Bottleneck
+Access to the bottleneck of the persistence
+```bash
+pyconda manage.py bottleneck <\subcommand>
+```
+| subcommand     | explaination            | arguments   |
+| :----------:   | :----------:             | :----------: |
+|  visualise     | plot the bottleneck graph  | -w_size <br/> --start_date <br/> --end_date <br/> --save    |
+|  get     | get the bottleneck   | -w_size <br/> --start_date <br/> --end_date  |
+|  crash_stats     |  get and plot statistics on crashs   | -w_size <br/> -year <br/> --test <br/> --plot </br> save  |
+|  clean     | clean the hidden working database   |  |
 
 
 ## Reference 
