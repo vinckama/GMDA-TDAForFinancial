@@ -56,6 +56,6 @@ echo ''
 echo "run pyconda manage.py bottleneck visualise -w_size=50 --start_date='2005-06-08' --end_date='2008-09-15'"
 (sleep 30s; echo '\r') | $pyconda manage.py bottleneck visualise -w_size=50 --start_date='2005-06-08' --end_date='2008-09-15'
 echo ''
-echo "run pyconda manage.py bottleneck crash_stats -w_size=80 -year=2008 --test --plot"
+echo "run pyconda manage.py bottleneck crash_stats -w_size=50 -year=2008 --test --plot"
 (sleep 60s; echo '\r') | $pyconda manage.py bottleneck crash_stats -w_size=80 -year=2008 --test --plot
 echo ''
