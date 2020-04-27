@@ -1,9 +1,9 @@
 # GMDA-TDAForFinancial
 
 ## Project
-The goal of this project was to analyze the evolutionof daily returns of four 
+The goal of this project was to analyze the evolution of daily returns of four 
 major US stock markets indices(DowJones, Nasdaq, Russell2000, SP500) over the 
-per-iod 1987 2016 using persistent homology following theapproach proposed by 
+period 1987 2016 using persistent homology following the approach proposed by 
 M. Gidea and Y. Katz in [1].
 
 
