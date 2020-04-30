@@ -9,8 +9,8 @@ M. Gidea and Y. Katz in [1].
 This project is part of the Foundations of Geometric Methods in Data Analysis course at CentraleSupélec. It is a fairly free project in the form that we have a few questions to guide us around a research paper [1]. This course is given by Frederic Cazals and Frederic Chazal, research director, Inria.
 
 
-we have developed a Command line 
-interface under Python allowing to reproduce the results of our approach.
+We have developed a Command line 
+interface under Python allowing to reproduce the results of our approach. The interface is documented but does not have automatic tests (shame on us!)
 
 ## Installation
 The whole module is based on the Gudhi library [2]. 
